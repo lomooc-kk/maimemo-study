@@ -62,3 +62,16 @@ powershell -ExecutionPolicy Bypass -File scripts/maimemo.ps1 raw GET "/memo/voca
 端点清单、必填字段、常见报错、记忆卡正文语法，都在 [references/api.md](references/api.md)。遇到没见过的报错先去那里对一遍再动手。
 
 记忆卡（Markji）那组接口目前对这个账号返回权限不足，需要用户在 App 里联系开发者开通；背单词那组完全可用。
+
+## 维护这个技能
+
+这个目录同时是 GitHub 私有仓库 `lomooc-kk/maimemo-study` 的工作副本，`origin` 已经配好，改完直接提交推送：
+
+```bash
+cd "$HOME/.codex/skills/maimemo-study"
+git add -A
+git commit -m "更新说明"
+git push
+```
+
+改脚本后要真跑一次确认能用（`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑）。令牌只放在 `~/.codex/maimemo_token`，永远不要提交进仓库。
