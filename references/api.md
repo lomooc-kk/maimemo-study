@@ -31,9 +31,23 @@
 
 DELETE 端点：`/memo/phrases/{id}`、`/memo/notes/{id}`、`/memo/interpretations/{id}`、`/memo/notepads/{id}`，都能删掉自己刚建的内容。
 
-## 单词释义拿不到
+## 接口能拿到什么
 
-`GET /memo/vocabulary?spelling=` 和 `POST /memo/vocabulary/query`（传 `spellings` 或 `ids`）都只返回 `voc_id` 和 `spelling`，没有中文释义、也没有音标；官方 api_bundle.yaml 里也搜不到 translation 或 phonetic 字段。写单词表、例句释义时中文和音标都自己写，不要为了拿这些反复调接口。
+字段来自官方 api_bundle.yaml 的 schema，并用真实令牌逐个调过确认。
+
+| 接口 | 返回的字段 |
+|---|---|
+| `GET /memo/vocabulary`、`POST /memo/vocabulary/query` | 只有 `id`（就是 voc_id）和 `spelling` |
+| `POST /memo/study/get_study_progress` | `finished`（今日已学）、`total`（今日计划）、`study_time`（毫秒） |
+| `POST /memo/study/get_today_items` | `voc_id`、`voc_spelling`、`order`、`first_response`、`is_new`、`is_finished` |
+| `POST /memo/study/query_study_records` | `voc_id`、`voc_spelling`、`add_date`、`first_study_date`、`last_study_date`、`next_study_date`、`last_response`、`study_count`、`tags` |
+| `GET /memo/phrases` | 例句 `id`、`phrase`、`interpretation`、`tags`、`highlight` |
+| `GET /memo/notes` | 助记 `id`、`note_type`、`note`、`status`、`created_time`、`updated_time` |
+| `GET /memo/interpretations` | 自定义释义 `id`、`interpretation`、`tags`、`status` |
+| `GET /memo/notepads` | 云词本 `id`、`type`、`creator`、`status`，正文要查单条 |
+| `/markji/...` | 牌组、章节、卡片正文（含挖空语法）、图片音频文件；当前账号返回 403 权限不足 |
+
+两点容易误会：`tags` 里装的是记忆状态（例如 `["WELL_FAMILIAR"]`），不是用户自己打的标签；接口拿不到中文释义、音标、词性、词频、词根词缀、官方词典例句和发音音频，写材料时这些都得自己写，不要为此反复调接口。
 
 ## 学习记录怎么查
 

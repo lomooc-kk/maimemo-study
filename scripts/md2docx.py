@@ -222,8 +222,22 @@ def set_cant_split(row):
     tr_pr.append(OxmlElement('w:cantSplit'))
 
 
-def add_word_list(doc, entries, size=9.0, columns=2):
-    """把单词表排成多列小字，每条一行：单词 + 音标 + 释义。"""
+def set_row_min_height(row, points):
+    """行高下限，允许被内容撑高（释义换行时才不会被裁掉）。"""
+    tr_pr = row._tr.get_or_add_trPr()
+    height = tr_pr.find(qn('w:trHeight'))
+    if height is None:
+        height = OxmlElement('w:trHeight')
+        tr_pr.append(height)
+    height.set(qn('w:val'), str(int(points * 20)))
+    height.set(qn('w:hRule'), 'atLeast')
+
+
+def add_word_list(doc, entries, size=9.5, columns=2):
+    """把单词表排成多列小字：单词（大一点）+ 音标（灰）+ 释义（更小）。
+
+    释义可以写到 20 字上下，放不下会自动换行，换行处留出悬挂缩进对齐。
+    """
     if not entries:
         return
     rows = -(-len(entries) // columns)
@@ -247,6 +261,8 @@ def add_word_list(doc, entries, size=9.0, columns=2):
         pf.space_before = Pt(0.5)
         pf.space_after = Pt(0.5)
         pf.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        pf.left_indent = Inches(0.15)
+        pf.first_line_indent = Inches(-0.15)
         run = paragraph.add_run(word)
         set_run_font(run)
         run.bold = True
@@ -254,13 +270,13 @@ def add_word_list(doc, entries, size=9.0, columns=2):
         if phon:
             run = paragraph.add_run(' ' + phon)
             set_run_font(run)
-            run.font.size = Pt(size - 0.5)
+            run.font.size = Pt(size - 1)
             run.font.color.rgb = RGBColor(0x59, 0x59, 0x59)
         if mean:
-            add_inline(paragraph, ' ' + mean, size=size)
+            add_inline(paragraph, ' ' + mean, size=size - 1.5)
     for row in table.rows:
-        row.height = Pt(size + 3)
         set_cant_split(row)
+        set_row_min_height(row, size + 3)
 
 
 def render(md_path, out_path, doc_title, subtitle=None):
