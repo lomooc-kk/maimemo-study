@@ -1,4 +1,4 @@
 interface:
   display_name: "墨墨背单词数据整理"
   short_description: "调墨墨开放 API 挑错词、写背诵短文、存例句助记"
-  default_prompt: "用 $maimemo-study 整理我最近三天的错词，写一篇背诵短文。"
+  default_prompt: "用 $maimemo-study 整理我最近三天的错词，写成一篇雅思阅读风格的文章。"

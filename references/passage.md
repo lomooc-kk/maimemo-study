@@ -2,42 +2,61 @@
 
 ## 目标
 
-把这批标错的词放进能想起的语境里，让人读一遍就建立起"这个词长什么样、用在什么地方"的印象。形式不重要，记住才重要。
+把这批标错的词放进能想起的语境里，让人读一遍就记住"这个词长什么样、用在什么地方"。默认写成**雅思阅读**那种学术说明文，因为雅思阅读本来就是考"在不熟悉的文章里认出词"，风格对上了，记忆和实战是一件事。
 
-## 形式可以自由选择
+## 雅思阅读风格怎么写
 
-没有固定模板，按这批词的特点挑一种顺手的写法：
+体裁上是一篇学术说明文，不是散文、不是故事、不是词表造句。照下面的特征写：
 
-- **连成故事**：几个场景按时间推进，画面具体，适合词性杂、名词动词都有的批次。
-- **一个主题的连续段落**：比如"一天的实验室""一趟旅行"，不强调情节，只求语境连贯。
-- **对话或独白**：适合口语化、动作性强的词。
-- **分组短句**：同一语义场的词放一起（船舶一组、法律一组、自然一组），每组几句，短、好读、方便反复看。
-- **带点荒诞的段子**：故意写得夸张好笑，记忆点更强。
+**标题与结构**
 
-长度按词量定：一百个词左右写成五六段到十段都行，每段别塞到读不下去。写不顺就多分几段，或者换一种形式，不要为了凑词写出读不懂的长句。
+- 标题用中性名词短语，例如 "The Decline of Coastal Shipping"、"How Birds Adapt to Cities"；不要问句，不要口号。
+- 全文 800–1100 词，分 3–5 个小节，每节 150–250 词，配简短小标题。错词较少时（二三十个）写 400–600 词即可。
+- 开头段给背景并交代全文范围；中间小节按时间顺序、因果、分类或对比展开，中间至少有一个具体的例子、地点或研究数据；结尾段收回整体，不做价值判断、不喊口号。
+
+**语言特征**（这是"雅思味"的核心）
+
+- 被动语态与无人称主语：It is estimated that…, The samples were collected from…
+- 名词化：the introduction of, the decline in, an increase in
+- 复杂名词短语带后置定语：a species that nests in…, the technique used by…
+- 让步与对比：although, whereas, while, despite, nevertheless
+- 因果与推断：as a result, thereby, which in turn
+- 有保留的表达：appears to, is thought to, may well, suggests
+- 分词与定语从句：originally built to…, having been introduced…
+- 用数据和举例代替空泛评价：a survey of 300 farmers, for instance
+- 不用第一人称，不用口语缩写，不用情绪化的形容词
+
+样例段落，用来校准语气：
+
+> The introduction of steam power to coastal shipping is often described as a single moment of change, yet the transition took decades. Whereas early engines were too heavy for small vessels, later designs allowed a **compatible** **apparatus** to be fitted to existing hulls, and freight costs fell accordingly. It appears that shipowners adopted the new technology not because they welcomed risk, but because insurance rates left them little choice.
+
+**目标词怎么放**
+
+- 大致每 8–12 个词出现一个目标词，读起来像生词本来就在文章里，而不是硬塞进去。
+- 优先放进解释性从句、并列名词短语、数据句和对比句里；词性不合就换一句重写，不要写出语法错误或怪句子。
+- 目标词加粗，标题和小标题不加粗。
 
 ## 必须做到的两件事
 
-1. **每个词都要出现在材料里**，允许时态和单复数变化（`weep→wept`、`swell→swelled`、`withhold→withheld`、`levy→levied` 等）。写完用脚本比对 `collect_review_words.py --out` 生成的 JSON，逐词核对，不要凭印象说"都写进去了"。
-2. **单词表跟在材料最后**，按词在文中出现的顺序排列。每个词一到两个常用义项，条目简短，一般不超过 12 个汉字，例如 `cottage 小屋；村舍`、`plumb 探测；测量深度`。不要搬词典的长解释，也不要用只在本文成立的临时义。
+1. **每个词都要出现在文章里**，允许时态和单复数变化（`weep→wept`、`swell→swelled`、`withhold→withheld`、`levy→levied` 等）。写完用脚本比对 `collect_review_words.py --out` 生成的 JSON，逐词核对，不要凭印象说"都写进去了"。
+2. **单词表跟在文章最后**，按词在文中出现的顺序排列。每个词一到两个常用义项，条目简短，一般不超过 12 个汉字，例如 `cottage 小屋；村舍`、`plumb 探测；测量深度`。不要搬词典的长解释，也不要用只在本文成立的临时义。
 
-## 习惯做法
+## 什么时候可以换风格
 
-这些是默认，不是硬要求，按内容需要调整：
+雅思风格是默认，不是铁律。如果这批词里全是口语、动作或情绪类的词，硬写成学术说明文会又别扭又难记，那就换成更顺手的写法（连成故事、对话、同语义场分组短句），并在交付时说一句为什么换。判断标准只有一个：哪种写法更容易记住这批词。
 
-- 把目标词加粗，扫一眼就知道哪些是重点；如果某种写法加粗反而碍眼就不加。
-- 小标题用中文短语标出段落位置，比如「3 远行」，方便回头定位。
+如果用户明确要别的风格（故事、口语、商务、小说片段等），以用户要求为准。
 
 ## 交付
 
-- 成品是 Word（`.docx`），默认只有两部分：**材料正文** 和 最后的**单词表**。不要加导语、逐段中文翻译、使用说明、数据来源说明、落款；用户明确要才加。
+- 成品是 Word（`.docx`），默认只有两部分：**文章正文** 和 最后的**单词表**。不要加导语、逐段中文翻译、使用说明、数据来源说明、落款；用户明确要才加。
 - 做法：先写一份 Markdown 中间稿放在本次对话目录的 `work/`，再转换：
 
   ```bash
   py -3 scripts/md2docx.py work/src.md "outputs/错词短文.docx" "标题"
   ```
 
-  标题一行即可；`md2docx.py` 支持 `#/##/###` 标题、`**加粗**`、表格、列表和代码块。
+  `md2docx.py` 支持 `#/##/###` 标题、`**加粗**`、表格、列表和代码块。文章标题写在文件名参数里，正文用 `##` 做小节标题。
 - 需要 python-docx。这台机器上装好的解释器是
   `C:\Users\江润\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe`，
   用其它解释器时先 `py -3 -m pip install python-docx`。
@@ -46,4 +65,4 @@
 
 ## 文风
 
-句子短、画面具体、少抽象名词。不要"赋能、打造、助力、见证"这类词，不要为了显得高级堆修辞。中文小标题和释义用日常说法。
+客观、克制、具体。不要"赋能、打造、助力、见证"这类词，不要为了显得高级堆抽象名词，也不要在正文里对读者说话。中文小标题和单词表释义用日常说法。
