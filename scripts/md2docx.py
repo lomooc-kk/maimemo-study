@@ -273,7 +273,7 @@ def add_word_list(doc, entries, size=9.5, columns=2):
             run.font.size = Pt(size - 1)
             run.font.color.rgb = RGBColor(0x59, 0x59, 0x59)
         if mean:
-            add_inline(paragraph, ' ' + mean, size=size - 1.5)
+            add_inline(paragraph, ' ' + mean, size=size)
     for row in table.rows:
         set_cant_split(row)
         set_row_min_height(row, size + 3)
@@ -318,6 +318,7 @@ def render(md_path, out_path, doc_title, subtitle=None):
     index = 0
     skipped_first_h1 = False
     in_word_list = False
+    small_body = False
     pending_entries = []
 
     def flush_word_list():
@@ -387,7 +388,16 @@ def render(md_path, out_path, doc_title, subtitle=None):
                 index += 1
                 continue
             flush_word_list()
-            in_word_list = '单词表' in text
+            if level <= 2:
+                in_word_list = '单词表' in text
+                small_body = '翻译' in text
+            if small_body and level >= 3:
+                paragraph = doc.add_paragraph()
+                paragraph.paragraph_format.space_before = Pt(7)
+                paragraph.paragraph_format.space_after = Pt(3)
+                add_inline(paragraph, text, size=10, bold=True)
+                index += 1
+                continue
             style = {1: 'Heading 1', 2: 'Heading 2'}.get(level, 'Heading 3')
             paragraph = doc.add_paragraph(style=style)
             add_inline(paragraph, text)
@@ -422,12 +432,18 @@ def render(md_path, out_path, doc_title, subtitle=None):
             style = 'List Bullet' if bullet else 'List Number'
             paragraph = doc.add_paragraph(style=style)
             paragraph.paragraph_format.space_after = Pt(4)
-            add_inline(paragraph, text)
+            add_inline(paragraph, text, size=9 if small_body else None)
             index += 1
             continue
 
         flush_word_list()
         paragraph = doc.add_paragraph()
+        if small_body:
+            paragraph.paragraph_format.space_after = Pt(5)
+            paragraph.paragraph_format.line_spacing = 1.15
+            add_inline(paragraph, stripped, size=9)
+            index += 1
+            continue
         add_inline(paragraph, stripped)
         index += 1
 
