@@ -192,6 +192,10 @@ def main():
         print(f"  {RESPONSES.get(code, code)}（{code}）：{count} 个")
     for day, count in result['by_date'].items():
         print(f'  {day}：{count} 个')
+    today = dt.date.today().isoformat()
+    if first_day.isoformat() <= today <= last_day.isoformat() and not result['by_date'].get(today):
+        hint = '当天可能还没背、还没同步' if result['total'] else '可能当天还没同步，或这段日期没有标记不熟/忘记'
+        print(f'  {today} 还没有记录：{hint}。')
     print()
     for code in wanted:
         words = [item['spelling'] for item in picked if item['last_response'] == code]

@@ -31,6 +31,10 @@
 
 DELETE 端点：`/memo/phrases/{id}`、`/memo/notes/{id}`、`/memo/interpretations/{id}`、`/memo/notepads/{id}`，都能删掉自己刚建的内容。
 
+## 单词释义拿不到
+
+`GET /memo/vocabulary?spelling=` 和 `POST /memo/vocabulary/query`（传 `spellings` 或 `ids`）都只返回 `voc_id` 和 `spelling`，没有任何中文释义字段；官方 api_bundle.yaml 里也搜不到 translation。写单词表或例句释义时自己写中文，不要为了拿释义反复调接口。
+
 ## 学习记录怎么查
 
 请求体字段：`next_study_date:{start,end}`、`voc_ids`、`spellings`、`tags`、`as_count`、`limit`。
