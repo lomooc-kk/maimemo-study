@@ -29,6 +29,8 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='repla
 LIST_HEADING = re.compile(r'^#{1,6}\s*单词表|\*\*单词表\*\*|^单词表', re.M)
 BOLD = re.compile(r'\*\*(.+?)\*\*')
 ENTRY = re.compile(r'^[-*]\s+([A-Za-z][A-Za-z\-]*)', re.M)
+ENTRY_RAW = re.compile(r'^[-*]\s+(.+)$', re.M)
+PHONETIC = re.compile(r'[/\[][^/\]\n]{1,40}[/\]]')
 
 # 不规则变化：正文里出现的形式 -> 单词表里的原形
 IRREGULAR = {
@@ -242,6 +244,10 @@ def main():
             print('单词表与正文出现顺序不一致，最早一处：' + f'{order_bad[0][0]} 对 {order_bad[0][1]}')
         else:
             print('单词表顺序与正文出现顺序一致')
+        raw_entries = ENTRY_RAW.findall(listing)
+        no_phonetic = [text.split()[0] for text in raw_entries if not PHONETIC.search(text)]
+        print(f'带音标（{len(raw_entries) - len(no_phonetic)}/{len(raw_entries)}）：'
+              + (show(no_phonetic) + ' 缺音标' if no_phonetic else '都有'))
         if list_missing or list_extra or duplicated or order_bad:
             problems.append('单词表')
 

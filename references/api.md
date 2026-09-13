@@ -33,7 +33,7 @@ DELETE 端点：`/memo/phrases/{id}`、`/memo/notes/{id}`、`/memo/interpretatio
 
 ## 单词释义拿不到
 
-`GET /memo/vocabulary?spelling=` 和 `POST /memo/vocabulary/query`（传 `spellings` 或 `ids`）都只返回 `voc_id` 和 `spelling`，没有任何中文释义字段；官方 api_bundle.yaml 里也搜不到 translation。写单词表或例句释义时自己写中文，不要为了拿释义反复调接口。
+`GET /memo/vocabulary?spelling=` 和 `POST /memo/vocabulary/query`（传 `spellings` 或 `ids`）都只返回 `voc_id` 和 `spelling`，没有中文释义、也没有音标；官方 api_bundle.yaml 里也搜不到 translation 或 phonetic 字段。写单词表、例句释义时中文和音标都自己写，不要为了拿这些反复调接口。
 
 ## 学习记录怎么查
 

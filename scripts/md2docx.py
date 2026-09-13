@@ -3,6 +3,9 @@
 
 支持：#/##/### 标题、**加粗**、`行内代码`、[文字](链接)、
 代码块、- / 1. 列表、> 引用、| 表格 |、--- 分隔线、<!-- 注释 -->。
+
+「单词表」小节里的 `- 单词 /音标/ 释义` 会排成两列小字，省纸、方便打印；
+音标可省略，省略时该条只显示单词和释义。
 """
 
 import io
@@ -198,6 +201,68 @@ def split_row(line):
     return [c.strip() for c in line.strip().strip('|').split('|')]
 
 
+ENTRY_RE = re.compile(
+    r'^(?P<word>[^\s/\[（(]+)\s*(?P<phon>[/\[][^/\]\n]{1,40}[/\]])?\s*(?P<mean>.*)$'
+)
+
+
+def parse_entry(text):
+    """把 `- terrain /təˈreɪn/ 地形；地势` 拆成单词、音标、释义。"""
+    text = text.strip().lstrip('-*').strip()
+    match = ENTRY_RE.match(text)
+    if not match:
+        return text, '', ''
+    word = match.group('word').strip('*`')
+    return word, (match.group('phon') or '').strip(), match.group('mean').strip()
+
+
+def set_cant_split(row):
+    """让一条词表内容不要被分页截断。"""
+    tr_pr = row._tr.get_or_add_trPr()
+    tr_pr.append(OxmlElement('w:cantSplit'))
+
+
+def add_word_list(doc, entries, size=9.0, columns=2):
+    """把单词表排成多列小字，每条一行：单词 + 音标 + 释义。"""
+    if not entries:
+        return
+    rows = -(-len(entries) // columns)
+    table = doc.add_table(rows=rows, cols=columns)
+    table.autofit = False
+    set_fixed_layout(table)
+    per_column = rows
+    width = 6.5 / columns
+    for index, entry in enumerate(entries):
+        column = index // per_column
+        row_index = index % per_column
+        if column >= columns:
+            break
+        cell = table.cell(row_index, column)
+        cell.width = Inches(round(width, 3))
+        word, phon, mean = parse_entry(entry)
+        paragraph = cell.paragraphs[0]
+        for run in list(paragraph.runs):
+            run._element.getparent().remove(run._element)
+        pf = paragraph.paragraph_format
+        pf.space_before = Pt(0.5)
+        pf.space_after = Pt(0.5)
+        pf.line_spacing_rule = WD_LINE_SPACING.SINGLE
+        run = paragraph.add_run(word)
+        set_run_font(run)
+        run.bold = True
+        run.font.size = Pt(size)
+        if phon:
+            run = paragraph.add_run(' ' + phon)
+            set_run_font(run)
+            run.font.size = Pt(size - 0.5)
+            run.font.color.rgb = RGBColor(0x59, 0x59, 0x59)
+        if mean:
+            add_inline(paragraph, ' ' + mean, size=size)
+    for row in table.rows:
+        row.height = Pt(size + 3)
+        set_cant_split(row)
+
+
 def render(md_path, out_path, doc_title, subtitle=None):
     lines = open(md_path, encoding='utf-8-sig').read().split('\n')
     doc = Document()
@@ -236,6 +301,14 @@ def render(md_path, out_path, doc_title, subtitle=None):
 
     index = 0
     skipped_first_h1 = False
+    in_word_list = False
+    pending_entries = []
+
+    def flush_word_list():
+        if pending_entries:
+            add_word_list(doc, list(pending_entries))
+            pending_entries.clear()
+
     while index < len(lines):
         line = lines[index].rstrip()
         stripped = line.strip()
@@ -248,6 +321,7 @@ def render(md_path, out_path, doc_title, subtitle=None):
             continue
 
         if stripped.startswith('```'):
+            flush_word_list()
             block = []
             index += 1
             while index < len(lines) and not lines[index].strip().startswith('```'):
@@ -258,6 +332,7 @@ def render(md_path, out_path, doc_title, subtitle=None):
             continue
 
         if stripped.startswith('|') and index + 1 < len(lines) and is_table_divider(lines[index + 1]):
+            flush_word_list()
             rows = [split_row(stripped)]
             index += 2
             while index < len(lines) and lines[index].strip().startswith('|'):
@@ -295,6 +370,8 @@ def render(md_path, out_path, doc_title, subtitle=None):
                 skipped_first_h1 = True
                 index += 1
                 continue
+            flush_word_list()
+            in_word_list = '单词表' in text
             style = {1: 'Heading 1', 2: 'Heading 2'}.get(level, 'Heading 3')
             paragraph = doc.add_paragraph(style=style)
             add_inline(paragraph, text)
@@ -306,6 +383,7 @@ def render(md_path, out_path, doc_title, subtitle=None):
             continue
 
         if stripped.startswith('> '):
+            flush_word_list()
             paragraph = doc.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.2)
             paragraph.paragraph_format.space_before = Pt(6)
@@ -321,6 +399,10 @@ def render(md_path, out_path, doc_title, subtitle=None):
         numbered = re.match(r'^(\d+)[.)]\s+(.*)$', stripped)
         if bullet or numbered:
             text = bullet.group(1) if bullet else numbered.group(2)
+            if in_word_list and bullet:
+                pending_entries.append(text)
+                index += 1
+                continue
             style = 'List Bullet' if bullet else 'List Number'
             paragraph = doc.add_paragraph(style=style)
             paragraph.paragraph_format.space_after = Pt(4)
@@ -328,10 +410,12 @@ def render(md_path, out_path, doc_title, subtitle=None):
             index += 1
             continue
 
+        flush_word_list()
         paragraph = doc.add_paragraph()
         add_inline(paragraph, stripped)
         index += 1
 
+    flush_word_list()
     doc.save(out_path)
     print('saved', out_path)
 
