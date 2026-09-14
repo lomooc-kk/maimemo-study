@@ -277,6 +277,7 @@ def add_word_list(doc, entries, size=9.5, columns=2):
     for row in table.rows:
         set_cant_split(row)
         set_row_min_height(row, size + 3)
+    return table
 
 
 CJK_RE = re.compile(r'[\u3400-\u9fff]')
@@ -337,6 +338,8 @@ def render(md_path, out_path, doc_title, subtitle=None):
     index = 0
     skipped_first_h1 = False
     small_body = False
+    last_paragraph = None      # 用来给词表块前面补间距
+    gap_before_next = 0.0      # 词表块后面要留的空隙
 
     while index < len(lines):
         line = lines[index].rstrip()
@@ -404,11 +407,15 @@ def render(md_path, out_path, doc_title, subtitle=None):
                 paragraph.paragraph_format.space_before = Pt(7)
                 paragraph.paragraph_format.space_after = Pt(3)
                 add_inline(paragraph, text, size=10, bold=True)
+                last_paragraph = paragraph
+                gap_before_next = 0.0
                 index += 1
                 continue
             style = {1: 'Heading 1', 2: 'Heading 2'}.get(level, 'Heading 3')
             paragraph = doc.add_paragraph(style=style)
             add_inline(paragraph, text)
+            last_paragraph = paragraph
+            gap_before_next = 0.0
             index += 1
             continue
 
@@ -419,12 +426,14 @@ def render(md_path, out_path, doc_title, subtitle=None):
         if stripped.startswith('> '):
             paragraph = doc.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.2)
-            paragraph.paragraph_format.space_before = Pt(6)
+            paragraph.paragraph_format.space_before = Pt(max(6.0, gap_before_next))
+            gap_before_next = 0.0
             paragraph.paragraph_format.space_after = Pt(10)
             add_inline(paragraph, stripped[2:], size=10)
             for run in paragraph.runs:
                 run.italic = True
                 run.font.color.rgb = RGBColor(0x44, 0x44, 0x44)
+            last_paragraph = paragraph
             index += 1
             continue
 
@@ -445,31 +454,49 @@ def render(md_path, out_path, doc_title, subtitle=None):
                 block.append(match.group(1))
                 cursor += 1
             if looks_like_word_entries(block):
+                # 词表块前后各留一点空隙，免得和上下段落贴在一起
+                if last_paragraph is not None:
+                    last_paragraph.paragraph_format.space_after = Pt(10)
                 add_word_list(doc, block)
+                last_paragraph = None
+                gap_before_next = 12.0
             else:
-                for text in block:
+                for position, text in enumerate(block):
                     paragraph = doc.add_paragraph(style='List Bullet')
+                    if position == 0 and gap_before_next:
+                        paragraph.paragraph_format.space_before = Pt(gap_before_next)
+                        gap_before_next = 0.0
                     paragraph.paragraph_format.space_after = Pt(4)
                     add_inline(paragraph, text, size=9 if small_body else None)
+                    last_paragraph = paragraph
             index = cursor
             continue
         if numbered:
             text = numbered.group(2)
             style = 'List Number'
             paragraph = doc.add_paragraph(style=style)
+            if gap_before_next:
+                paragraph.paragraph_format.space_before = Pt(gap_before_next)
+                gap_before_next = 0.0
             paragraph.paragraph_format.space_after = Pt(4)
             add_inline(paragraph, text, size=9 if small_body else None)
+            last_paragraph = paragraph
             index += 1
             continue
 
         paragraph = doc.add_paragraph()
+        if gap_before_next:
+            paragraph.paragraph_format.space_before = Pt(gap_before_next)
+            gap_before_next = 0.0
         if small_body or is_translation(stripped):
             paragraph.paragraph_format.space_after = Pt(5)
             paragraph.paragraph_format.line_spacing = 1.15
             add_inline(paragraph, stripped, size=9)
+            last_paragraph = paragraph
             index += 1
             continue
         add_inline(paragraph, stripped)
+        last_paragraph = paragraph
         index += 1
 
     doc.save(out_path)

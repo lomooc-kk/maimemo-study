@@ -55,7 +55,7 @@ py -3 scripts/md2docx.py work/src.md "outputs/错词短文-9月11-12日.docx" "�
 powershell -ExecutionPolicy Bypass -File scripts/docx2pdf.ps1 -Docx "outputs/错词短文-9月11-12日.docx" -Pdf "outputs/错词短文-9月11-12日.pdf"
 ```
 
-`md2docx.py` 会把中文段落排成 9 磅小字、把生词块排成两列小字（单词 9.5 磅加粗、音标 8.5 磅灰字、释义同字号，每条不跨页）；`docx2pdf.ps1` 用本机装的 Word 导出 PDF，没装就只交 Word 并说明一句。
+`md2docx.py` 会把中文段落排成 9 磅小字、把生词块排成两列小字（单词 9.5 磅加粗、音标 8.5 磅灰字、释义同字号，每条不跨页），生词块前后自动留出间距，不会和上下段落贴在一起；`docx2pdf.ps1` 用本机装的 Word 导出 PDF，没装就只交 Word 并说明一句。
 
 ## 三、把内容写回账号
 
