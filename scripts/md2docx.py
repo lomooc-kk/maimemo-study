@@ -279,6 +279,25 @@ def add_word_list(doc, entries, size=9.5, columns=2):
         set_row_min_height(row, size + 3)
 
 
+CJK_RE = re.compile(r'[\u3400-\u9fff]')
+WORD_ENTRY_RE = re.compile(r"^[A-Za-z][A-Za-z'\-]*(\s|$)")
+
+
+def is_translation(text):
+    """中文字段：含汉字且几乎不含英文单词时，按译文排小字。"""
+    if not CJK_RE.search(text):
+        return False
+    return len(re.findall(r'[A-Za-z]', text)) <= 5
+
+
+def looks_like_word_entries(texts):
+    """判断一个列表块是不是 `单词 /音标/ 释义` 形式的词表。"""
+    if not texts:
+        return False
+    hits = sum(1 for text in texts if WORD_ENTRY_RE.match(text.strip()))
+    return hits * 2 >= len(texts)
+
+
 def render(md_path, out_path, doc_title, subtitle=None):
     lines = open(md_path, encoding='utf-8-sig').read().split('\n')
     doc = Document()
@@ -317,14 +336,7 @@ def render(md_path, out_path, doc_title, subtitle=None):
 
     index = 0
     skipped_first_h1 = False
-    in_word_list = False
     small_body = False
-    pending_entries = []
-
-    def flush_word_list():
-        if pending_entries:
-            add_word_list(doc, list(pending_entries))
-            pending_entries.clear()
 
     while index < len(lines):
         line = lines[index].rstrip()
@@ -338,7 +350,6 @@ def render(md_path, out_path, doc_title, subtitle=None):
             continue
 
         if stripped.startswith('```'):
-            flush_word_list()
             block = []
             index += 1
             while index < len(lines) and not lines[index].strip().startswith('```'):
@@ -349,7 +360,6 @@ def render(md_path, out_path, doc_title, subtitle=None):
             continue
 
         if stripped.startswith('|') and index + 1 < len(lines) and is_table_divider(lines[index + 1]):
-            flush_word_list()
             rows = [split_row(stripped)]
             index += 2
             while index < len(lines) and lines[index].strip().startswith('|'):
@@ -387,9 +397,7 @@ def render(md_path, out_path, doc_title, subtitle=None):
                 skipped_first_h1 = True
                 index += 1
                 continue
-            flush_word_list()
             if level <= 2:
-                in_word_list = '单词表' in text
                 small_body = '翻译' in text
             if small_body and level >= 3:
                 paragraph = doc.add_paragraph()
@@ -409,7 +417,6 @@ def render(md_path, out_path, doc_title, subtitle=None):
             continue
 
         if stripped.startswith('> '):
-            flush_word_list()
             paragraph = doc.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.2)
             paragraph.paragraph_format.space_before = Pt(6)
@@ -423,22 +430,40 @@ def render(md_path, out_path, doc_title, subtitle=None):
 
         bullet = re.match(r'^[-*]\s+(.*)$', stripped)
         numbered = re.match(r'^(\d+)[.)]\s+(.*)$', stripped)
-        if bullet or numbered:
-            text = bullet.group(1) if bullet else numbered.group(2)
-            if in_word_list and bullet:
-                pending_entries.append(text)
-                index += 1
-                continue
-            style = 'List Bullet' if bullet else 'List Number'
+        if bullet:
+            # 连着的一串短横线条目算一个块：是词表就排成小字多列，否则当普通列表。
+            block = []
+            cursor = index
+            while cursor < len(lines):
+                candidate = lines[cursor].strip()
+                if not candidate:
+                    cursor += 1
+                    continue
+                match = re.match(r'^[-*]\s+(.*)$', candidate)
+                if not match:
+                    break
+                block.append(match.group(1))
+                cursor += 1
+            if looks_like_word_entries(block):
+                add_word_list(doc, block)
+            else:
+                for text in block:
+                    paragraph = doc.add_paragraph(style='List Bullet')
+                    paragraph.paragraph_format.space_after = Pt(4)
+                    add_inline(paragraph, text, size=9 if small_body else None)
+            index = cursor
+            continue
+        if numbered:
+            text = numbered.group(2)
+            style = 'List Number'
             paragraph = doc.add_paragraph(style=style)
             paragraph.paragraph_format.space_after = Pt(4)
             add_inline(paragraph, text, size=9 if small_body else None)
             index += 1
             continue
 
-        flush_word_list()
         paragraph = doc.add_paragraph()
-        if small_body:
+        if small_body or is_translation(stripped):
             paragraph.paragraph_format.space_after = Pt(5)
             paragraph.paragraph_format.line_spacing = 1.15
             add_inline(paragraph, stripped, size=9)
@@ -447,7 +472,6 @@ def render(md_path, out_path, doc_title, subtitle=None):
         add_inline(paragraph, stripped)
         index += 1
 
-    flush_word_list()
     doc.save(out_path)
     print('saved', out_path)
 

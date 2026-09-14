@@ -26,10 +26,8 @@ import sys
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-LIST_HEADING = re.compile(r'^#{1,6}\s*单词表|\*\*单词表\*\*|^单词表', re.M)
 BOLD = re.compile(r'\*\*(.+?)\*\*')
-ENTRY = re.compile(r'^[-*]\s+([A-Za-z][A-Za-z\-]*)', re.M)
-ENTRY_RAW = re.compile(r'^[-*]\s+(.+)$', re.M)
+ENTRY_WORD = re.compile(r"^([A-Za-z][A-Za-z'\-]*)")
 PHONETIC = re.compile(r'[/\[][^/\]\n]{1,40}[/\]]')
 
 # 不规则变化：正文里出现的形式 -> 单词表里的原形
@@ -180,17 +178,33 @@ def load_targets(path):
 
 
 def split_body_and_list(md):
-    match = LIST_HEADING.search(md)
-    if not match:
-        return md, ''
-    return md[:match.start()], md[match.end():]
+    """拆成 (英文正文, 词条原文本)。
+
+    词条现在散在各段后面（一串串 `- 单词 /音标/ 释义`），所以整篇一起收集：
+    所有列表行算词条，只含英文的段算作正文。
+    """
+    body_lines = []
+    raw_entries = []
+    for line in md.split('\n'):
+        stripped = line.strip()
+        bullet = re.match(r'^[-*]\s+(.*)$', stripped)
+        if bullet:
+            raw_entries.append(bullet.group(1))
+            continue
+        if not stripped or stripped[0] in '#|>`':
+            continue
+        latin = len(re.findall(r'[A-Za-z]', stripped))
+        cjk = len(re.findall(r'[\u3400-\u9fff]', stripped))
+        if latin >= 20 and latin >= 3 * cjk:
+            body_lines.append(stripped)
+    return '\n'.join(body_lines), raw_entries
 
 
 def main():
     parser = argparse.ArgumentParser(description='核对错词短文的用词与词表')
     parser.add_argument('--words', required=True, help='collect_review_words.py 的 JSON，或一行一个词的文本')
     parser.add_argument('--md', required=True, help='短文中间稿 Markdown')
-    parser.add_argument('--skeleton', action='store_true', help='打印单词表骨架')
+    parser.add_argument('--skeleton', action='store_true', help='按正文出现顺序打印词条骨架')
     parser.add_argument('--max-gap', type=float, default=18.0,
                         help='平均多少词才出现一个目标词，超过就提醒（默认 18）')
     parser.add_argument('--min-gap', type=float, default=6.0,
@@ -203,9 +217,9 @@ def main():
 
     targets = load_targets(args.words)
     md = open(args.md, encoding='utf-8').read()
-    body, listing = split_body_and_list(md)
+    body, raw_entries = split_body_and_list(md)
     bold = [m.group(1) for m in BOLD.finditer(body)]
-    entries = ENTRY.findall(listing)
+    entries = [match.group(1) for match in (ENTRY_WORD.match(text.strip()) for text in raw_entries) if match]
     plain = re.sub(r'\*\*', '', body)
     word_count = len(re.findall(r"[A-Za-z][A-Za-z'\-]*", plain))
 
@@ -225,9 +239,9 @@ def main():
     if extra:
         problems.append('多出的加粗')
 
-    if not listing:
-        print('没找到「单词表」小节')
-        problems.append('缺单词表')
+    if not entries:
+        print('没有找到任何词条（各段后面那串 `- 单词 /音标/ 释义`）')
+        problems.append('缺词条')
     else:
         list_missing = [t for t in targets if not any(same(t, e) for e in entries)]
         list_extra = [e for e in entries if not any(same(e, t) for t in targets)]
@@ -237,14 +251,13 @@ def main():
         for index, entry in enumerate(entries):
             if index >= len(first_seen) or not same(entry, first_seen[index]):
                 order_bad.append((entry, first_seen[index] if index < len(first_seen) else '（正文词数不足）'))
-        print(f'单词表 {len(entries)} 条；缺词（{len(list_missing)}）：' + show(list_missing))
-        print(f'单词表多余（{len(list_extra)}）：' + show(list_extra))
-        print(f'单词表重复（{len(duplicated)}）：' + show(duplicated))
+        print(f'词条 {len(entries)} 条；缺词（{len(list_missing)}）：' + show(list_missing))
+        print(f'词条多余（{len(list_extra)}）：' + show(list_extra))
+        print(f'词条重复（{len(duplicated)}）：' + show(duplicated))
         if order_bad:
-            print('单词表与正文出现顺序不一致，最早一处：' + f'{order_bad[0][0]} 对 {order_bad[0][1]}')
+            print('词条顺序与正文出现顺序不一致，最早一处：' + f'{order_bad[0][0]} 对 {order_bad[0][1]}')
         else:
-            print('单词表顺序与正文出现顺序一致')
-        raw_entries = ENTRY_RAW.findall(listing)
+            print('词条顺序与正文出现顺序一致')
         no_phonetic = [text.split()[0] for text in raw_entries if not PHONETIC.search(text)]
         print(f'带音标（{len(raw_entries) - len(no_phonetic)}/{len(raw_entries)}）：'
               + (show(no_phonetic) + ' 缺音标' if no_phonetic else '都有'))
@@ -267,7 +280,7 @@ def main():
     if problems:
         print('\n需要修改：' + '、'.join(problems))
         return 1
-    print('\n全部通过：目标词都在正文里，单词表收全且顺序一致。')
+    print('\n全部通过：目标词都在正文里，词条收全且顺序一致。')
     return 0
 
 

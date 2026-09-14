@@ -38,17 +38,24 @@ py -3 scripts/collect_review_words.py --from 2026-09-01 --to 2026-09-13 --out wo
 
 篇幅跟着词数走，不是固定值：二三十个词写 400–600 词，五十来个写 800–1100 词，一百个上下写 1500–2000 词、六节左右。平均每 10 个词出现一个目标词最舒服，超过 18 就说明铺垫太多。一次超过 120 个词时先问用户要一篇长的还是拆成两三篇短的。
 
-硬要求只有两条：每个错词都要出现在文章里，单词表跟在最后、释义简短。两条都用脚本核对，不要凭印象：
+中间稿按「英文段落 → 该段中文译文 → 该段生词」交替写，用脚本核对，不要凭印象：
 
 ```bash
-# 先拿词表骨架（按正文出现顺序排好原形），照着填释义
+# 先拿词条骨架（按正文出现顺序排好原形），照着填释义
 py -3 scripts/check_passage.py --words work/words.json --md work/src.md --skeleton
 
-# 写完核对：漏词、多余的加粗、重复加粗、词表收词与顺序
+# 写完核对：漏词、多余的加粗、重复加粗、词条收全与顺序
 py -3 scripts/check_passage.py --words work/words.json --md work/src.md
 ```
 
-退出码非 0 就改到通过为止；它还会报单词表里有几条缺音标。中文释义和音标接口都不提供，都得自己写，条目写成 `单词 /英式音标/ 释义`（释义放不下会自动换行，不用为凑一行砍义项）。成品交 Word，三部分按顺序放：正文、单词表、全文中文翻译（`## 中文翻译`，正文 9 磅小字、按节分段，与英文段落一一对应）；只有用户明确说不要翻译时才省掉。`md2docx.py` 会把「单词表」小节自动排成两列——单词 9.5 磅加粗、音标 8.5 磅灰字、释义同字号，每条不跨页。文件名带上日期区间（如 `错词短文-9月11-12日.docx`）。
+退出码非 0 就改到通过为止；它还会报有几条生词缺音标。中文释义和音标接口都不提供，都得自己写，条目写成 `单词 /英式音标/ 释义`（释义放不下会自动换行，不用为凑一行砍义项）。成品给 Word 和 PDF 两份，文件名带日期区间：
+
+```bash
+py -3 scripts/md2docx.py work/src.md "outputs/错词短文-9月11-12日.docx" "标题"
+powershell -ExecutionPolicy Bypass -File scripts/docx2pdf.ps1 -Docx "outputs/错词短文-9月11-12日.docx" -Pdf "outputs/错词短文-9月11-12日.pdf"
+```
+
+`md2docx.py` 会把中文段落排成 9 磅小字、把生词块排成两列小字（单词 9.5 磅加粗、音标 8.5 磅灰字、释义同字号，每条不跨页）；`docx2pdf.ps1` 用本机装的 Word 导出 PDF，没装就只交 Word 并说明一句。
 
 ## 三、把内容写回账号
 
@@ -88,4 +95,4 @@ git commit -m "更新说明"
 git push
 ```
 
-改脚本后要真跑一次确认能用（`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不需要令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下）。令牌只放在 `~/.codex/maimemo_token`，永远不要提交进仓库。
+改脚本后要真跑一次确认能用（`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不用令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下；`docx2pdf.ps1` 要本机有 Word，转一份出来看页数对不对）。PowerShell 脚本必须存成带 BOM 的 UTF-8——用编辑器或脚本改过之后检查一下开头是不是还有 BOM，否则 Windows PowerShell 会把中文注释读成乱码并直接语法报错。令牌只放在 `~/.codex/maimemo_token`，永远不要提交进仓库。
