@@ -4,16 +4,48 @@
 
 把这批标错的词放进能想起的语境里，读一遍就记住"这个词长什么样、用在什么地方"。默认写成**雅思阅读**那种学术说明文，因为雅思阅读本身就是考"在不熟悉的文章里认出词"，风格对上了，记忆和实战是一件事。
 
-但风格是外壳，第一目标是**读得进去**。文章要让人一口气读完不卡壳，读完能说出"这篇讲了什么、分几块讲"。难词已经够多了，句子结构必须简单。
+但风格是外壳，第一目标是**读得进去**。文章要让人一口气读完不卡壳，读完能说出"这篇讲了什么、分几块讲"。难词已经够多了，句子结构必须跟着档位走。
 
-## 难度：让人一遍读懂
+## 先定难度档
 
-上一版失败的地方就是句子太绕。照下面这几条写，写完逐条检查：
+写之前先定档：**简单 / 中等 / 困难**。
 
-- **句子短。**平均 12–18 个词，单句不超过 30 个词。
-- **一句最多一个从句。**不要写"which 里面套 that"这种两层结构；想加信息就另起一句。
-- **一句里的目标词不超过两个。**一条句子里塞三四个生词，读者会直接放弃。一段 4–6 个目标词比较合适。
-- **除目标词外全用常见词。**不要用另一个生僻词去解释一个生僻词。
+- 如果当前会话支持带选项的提问界面，就直接把这三个选项摆给用户点。
+- 不支持就用一句话问清楚。
+- 用户没提、说随便、或者已经说了"简单点"之外的模糊要求，按**中等**写，并在交付时补一句"想要更简单或更难的版本随时说"。
+
+三档用同一套结构要求（梗概、主题句、衔接、结尾），差别只在句子长度、句子里的负载和用词难度：
+
+| | 简单 | 中等（默认） | 困难 |
+|---|---|---|---|
+| 平均句长 | 8–14 词 | 12–18 词 | 16–26 词 |
+| 单句上限 | 20 词 | 30 词 | 38 词 |
+| 一句最多目标词 | 1 个 | 2 个 | 3 个 |
+| 每段目标词 | 3–5 个 | 4–7 个 | 6–10 个 |
+| 从句 | 基本不用，主谓宾直陈 | 一句最多一处 | 可以两处，允许分词短语、让步与对比 |
+| 非目标词 | 只用最常见词 | 常见词 | 可以少量中等难度词 |
+| 段落长度 | 3–4 句 | 4–6 句 | 4–6 句（句子更长） |
+
+同一件事的三种写法，用来校准手感：
+
+- **简单**：Engineers built a smaller **apparatus**. It fitted into old wooden ships. As a result, ships left the **dock** sooner.
+- **中等**：Engineers then built a smaller **apparatus** that could be fitted into an old wooden hull, so a ship could leave the **dock** within hours instead of waiting for a favourable wind.
+- **困难**：Although early engines were too heavy for small vessels, the **apparatus** that engineers later produced could be fitted into an existing hull, **thereby** cutting the time a ship spent waiting for wind.
+
+写完按档核对：
+
+```bash
+py -3 scripts/check_difficulty.py --md work/src.md --level 中等 --words work/words.json
+```
+
+它会报平均句长、最长句、每句目标词数、从句数量和密度是否超出该档范围，退出码非 0 就改到通过。简单档尤其注意：句子一短，目标词就会挤在一起，宁可多写几句铺垫。
+
+## 无论哪一档都要守的底线
+
+- **句子短。**句子长度按上表控制在档内。
+- **一句最多一处从句。**不要写"which 里面套 that"；简单档干脆不用从句。
+- **不要把生词挤在一句里。**一句里的目标词数按上表；一段里也要分布开。
+- **除目标词外不堆生词。**简单档和中等档不要用另一个生僻词去解释一个生僻词。
 - **专业概念当场解释。**第一次出现时用同位语带一下，例如 `a **propeller**, a device that pushes a ship forward`。
 - **句式别雷同。**不要连续三段都用 `By the 1830s, ...` 开头。
 - **写不通就拆句。**宁可句子碎一点，也不要一句话读两遍才懂。
@@ -22,7 +54,7 @@
 
 ## 逻辑与梗概
 
-上一版另一个问题是东一段西一段，没有主线。按下面的骨架写：
+另一个常见问题是东一段西一段、没有主线。按下面的骨架写：
 
 **开头段 2–3 句，给出梗概。**第一句交代背景，第二句是导航句，明确告诉读者这篇讲什么、按什么顺序讲，例如：
 
@@ -50,10 +82,10 @@
 **标题与篇幅**
 
 - 标题用中性名词短语，例如 "The Decline of Coastal Shipping"、"How Birds Adapt to Cities"；不要问句，不要口号。
-- 篇幅按词数定：二十来个词写 400–600 词，五十个左右写 700–1000 词，一百个上下写 1200–1800 词。小节数跟着增加，一百个词配五到七节，每节 200–300 词。词数超过 120 个时，先问用户要一篇长的还是拆成两三篇短的。
+- 篇幅按词数定（三档通用）：二十来个词写 400–600 词，五十个左右写 700–1000 词，一百个上下写 1200–1800 词。小节数跟着增加，一百个词配五到七节，每节 200–300 词。词数超过 120 个时，先问用户要一篇长的还是拆成两三篇短的。
 - 开头段给背景并交代全文范围；中间小节按上面那几种顺序展开，至少有一个具体的例子、地点或研究数据；结尾段收回整体。
 
-**语言特征**（这是"雅思味"的核心）
+**语言特征**（"雅思味"的来源；简单档只挑最简单的几条用，困难档可以全用）
 
 - 被动语态与无人称主语：It is estimated that…, The samples were collected from…
 - 名词化：the introduction of, the decline in, an increase in
@@ -64,15 +96,9 @@
 - 不用第一人称，不用口语缩写，不用情绪化的形容词
 - 复杂名词短语、分词结构和定语从句是"雅思味"的来源，但**一句最多用一个**，不要叠着用
 
-样例段落，用来校准难度和语气：
-
-> Steam power reached coastal shipping slowly. In the 1820s most goods still travelled by sail, because early engines were heavy and burned too much coal. Engineers then built a smaller **apparatus** that could be fitted into an old wooden hull. As a result, a ship could leave the **dock** within hours instead of waiting for a favourable wind. The change was gradual, but it never reversed.
-
-这段五句话，最长 20 个词，两个目标词，一句一个从句。写每一段都按这个尺度来。
-
 **目标词怎么放**
 
-- 平均每 12–18 个词出现一个目标词，读起来像生词本来就在文章里，而不是硬塞进去。写完用 `check_passage.py` 看实际密度，超过 18 就删掉些铺垫句。
+- 平均密度按档位控制（大致每 10–20 个词一个目标词），写完用 `check_passage.py` 看实际密度，超过 18 就删掉些铺垫句。
 - 优先放进解释性从句、并列名词短语、数据句和对比句里；词性不合就换一句重写，不要写出语法错误或怪句子。
 - 目标词加粗，标题和小标题不加粗。
 - 词多的时候，先把词按主题粗分到各节（每节 15–25 个），再逐节写；比边写边想下一句更难漏词，也更容易让每个词落到合适的语境里。
@@ -108,9 +134,9 @@ py -3 scripts/check_passage.py --words work/words.json --md work/src.md
 - 做法：先写一份 Markdown 中间稿放在本次对话目录的 `work/`，再转换：
 
   ```bash
-  py -3 scripts/md2docx.py work/src.md "outputs/错词短文.docx" "标题"
+  py -3 scripts/md2docx.py work/src.md "outputs/错词短文-9月11-12日-中等.docx" "标题"
   powershell -ExecutionPolicy Bypass -File scripts/docx2pdf.ps1 `
-    -Docx "outputs/错词短文.docx" -Pdf "outputs/错词短文.pdf"
+    -Docx "outputs/错词短文-9月11-12日-中等.docx" -Pdf "outputs/错词短文-9月11-12日-中等.pdf"
   ```
 
   `docx2pdf.ps1` 调用本机 Microsoft Word 导出，排版和 Word 里完全一致；没装 Word 就直接报错，这时交付 Word 并说明一下。转换完可以抽查一下 PDF 能打开、页数正常。
@@ -118,7 +144,7 @@ py -3 scripts/check_passage.py --words work/words.json --md work/src.md
 - 需要 python-docx。`py -3 -m pip install python-docx` 装上即可；已经装好 python-docx 的解释器直接用。
 - 用户自用材料，不需要渲染和逐页排版检查；生成后确认文件能打开、内容齐全即可。
 - 中间稿和临时文件放 `work/`，最终 Word 放到该对话目录的 `outputs/`。用户指定了别的路径就以用户说的为准。
-- 文件名带上日期区间，如 `错词短文-9月11-12日.docx` / `.pdf`；文章标题用英文，中文只出现在译文和生词释义里。
+- 文件名带上日期区间和难度档，如 `错词短文-9月11-12日-简单.docx` / `.pdf`，回头好找。文章标题用英文，中文只出现在译文和生词释义里。
 - 生词块会自动排成两列：单词 9.5 磅加粗、音标 8.5 磅灰字、中文释义与单词同字号；释义放不下会自动换行并悬挂缩进，每条不跨页。块的前后会自动留出间距（前 10 磅、后 12 磅），不会和上下段落贴在一起。
 
 ## 文风

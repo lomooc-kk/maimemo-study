@@ -36,7 +36,11 @@ py -3 scripts/collect_review_words.py --from 2026-09-01 --to 2026-09-13 --out wo
 
 ## 二、把错词写成记忆材料
 
-动手前读 [references/passage.md](references/passage.md)。默认写成雅思阅读那种学术说明文，但**第一要求是读得进去**：句子短（平均 12–18 词、不超过 30 词）、一句最多一个从句、一句里的目标词不超过两个、除目标词外全用常见词。文章要有梗概和主线：开头两句话交代背景与全文顺序，每节第一句是主题句，节与节之间有显式衔接，结尾两三句收回主线。写完做一次"梗概测试"——把所有小标题和每段第一句连起来读，读得通才算逻辑成立。
+动手前读 [references/passage.md](references/passage.md)。默认写成雅思阅读那种学术说明文，但**第一要求是读得进去**。
+
+**先定难度档：简单 / 中等 / 困难。**如果当前会话支持带选项的提问界面，就把这三个选项摆给用户点；不支持就问一句。用户没提或说随便，按中等写，交付时补一句可以换档。三档的具体参数（平均句长、单句上限、一句最多几个目标词、每段几个、从句数量、用词难度）在 references/passage.md 的表格里。
+
+三档共用的要求：句子短、一句最多一处从句、一句里的目标词不超过两个、除目标词外不堆生词；文章要有梗概和主线——开头两句话交代背景与全文顺序，每节第一句是主题句，节与节之间有显式衔接，结尾两三句收回主线。写完做一次"梗概测试"：把所有小标题和每段第一句连起来读，读得通才算逻辑成立。
 
 篇幅跟着词数走，不是固定值：二三十个词写 400–600 词，五十来个写 700–1000 词，一百个上下写 1200–1800 词、五到七节。目标词平均每 12–18 个词出现一个最舒服，超过 18 就说明铺垫太多。一次超过 120 个词时先问用户要一篇长的还是拆成两三篇短的。
 
@@ -48,13 +52,16 @@ py -3 scripts/check_passage.py --words work/words.json --md work/src.md --skelet
 
 # 写完核对：漏词、多余的加粗、重复加粗、词条收全与顺序
 py -3 scripts/check_passage.py --words work/words.json --md work/src.md
+
+# 按该档核对难度：平均句长、最长句、每句目标词数、从句数、密度
+py -3 scripts/check_difficulty.py --md work/src.md --level 中等 --words work/words.json
 ```
 
 退出码非 0 就改到通过为止；它还会报有几条生词缺音标。中文释义和音标接口都不提供，都得自己写，条目写成 `单词 /英式音标/ 释义`（释义放不下会自动换行，不用为凑一行砍义项）。成品给 Word 和 PDF 两份，文件名带日期区间：
 
 ```bash
-py -3 scripts/md2docx.py work/src.md "outputs/错词短文-9月11-12日.docx" "标题"
-powershell -ExecutionPolicy Bypass -File scripts/docx2pdf.ps1 -Docx "outputs/错词短文-9月11-12日.docx" -Pdf "outputs/错词短文-9月11-12日.pdf"
+py -3 scripts/md2docx.py work/src.md "outputs/错词短文-9月11-12日-中等.docx" "标题"
+powershell -ExecutionPolicy Bypass -File scripts/docx2pdf.ps1 -Docx "outputs/错词短文-9月11-12日-中等.docx" -Pdf "outputs/错词短文-9月11-12日-中等.pdf"
 ```
 
 `md2docx.py` 会把中文段落排成 9 磅小字、把生词块排成两列小字（单词 9.5 磅加粗、音标 8.5 磅灰字、释义同字号，每条不跨页），生词块前后自动留出间距，不会和上下段落贴在一起；`docx2pdf.ps1` 用本机装的 Word 导出 PDF，没装就只交 Word 并说明一句。
