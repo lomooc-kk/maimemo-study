@@ -36,7 +36,9 @@ CLAUSE_MARKERS = (
     'which', 'who', 'whom', 'whose', 'where', 'when', 'while', 'whereas',
     'although', 'though', 'because', 'since', 'unless', 'despite', 'until', 'whether',
 )
-PHRASES_TO_IGNORE = ('as a result', 'such as', 'as well as', 'so that', 'rather than', 'instead of')
+# 这些是介词短语或固定搭配，不引导从句，算进去会误判
+PHRASES_TO_IGNORE = ('as a result', 'such as', 'as well as', 'so that', 'rather than', 'instead of',
+                     'because of', 'in spite of', 'apart from', 'regardless of')
 ABBREVIATIONS = ('Mr.', 'Mrs.', 'Dr.', 'St.', 'etc.', 'e.g.', 'i.e.', 'vs.', 'No.')
 BOLD = re.compile(r'\*\*(.+?)\*\*')
 SENTENCE_SPLIT = re.compile(r'(?<=[.!?])\s+')
@@ -47,7 +49,9 @@ def english_paragraphs(md_text):
     paragraphs = []
     for raw in md_text.split('\n'):
         line = raw.strip()
-        if not line or line.startswith(('#', '-', '*', '>', '|', '`')):
+        # 只跳过真正的标题/列表/引用/表格/代码行。以 **单词** 开头的句子是正文，
+        # 不能因为首字符是 * 就被当成列表丢掉。
+        if not line or re.match(r'^(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```)', line):
             continue
         letters = sum(1 for ch in line if ch.isascii() and ch.isalpha())
         chinese = sum(1 for ch in line if '\u4e00' <= ch <= '\u9fff')
@@ -86,7 +90,8 @@ def load_words(path):
 
 def count_targets(sentence, word_list):
     targets = [span.strip().lower() for span in BOLD.findall(sentence)]
-    lowered = sentence.lower()
+    # 加粗部分先挖掉，否则同一个词会被算两次（一次加粗、一次命中词表）
+    lowered = BOLD.sub(' ', sentence).lower()
     for word in word_list:
         if word and re.search(rf'\b{re.escape(word)}\w*', lowered):
             targets.append(word)
