@@ -45,7 +45,7 @@ DELETE 端点：`/memo/phrases/{id}`、`/memo/notes/{id}`、`/memo/interpretatio
 | `GET /memo/notes` | 助记 `id`、`note_type`、`note`、`status`、`created_time`、`updated_time` |
 | `GET /memo/interpretations` | 自定义释义 `id`、`interpretation`、`tags`、`status` |
 | `GET /memo/notepads` | 云词本 `id`、`type`、`creator`、`status`，正文要查单条 |
-| `/markji/...` | 牌组、章节、卡片正文（含挖空语法）、图片音频文件；当前账号返回 403 权限不足 |
+| `/markji/...` | 牌组、章节、卡片正文（含挖空语法）、图片音频文件；部分账号没有权限 |
 
 两点容易误会：`tags` 里装的是记忆状态（例如 `["WELL_FAMILIAR"]`），不是用户自己打的标签；接口拿不到中文释义、音标、词性、词频、词根词缀、官方词典例句和发音音频，写材料时这些都得自己写，不要为此反复调接口。
 
@@ -92,7 +92,7 @@ DELETE 端点：`/memo/phrases/{id}`、`/memo/notes/{id}`、`/memo/interpretatio
 
 卡片正文是一套方括号语法（挖空、选择题、公式、图片等），写之前读 [markji-card-syntax.md](markji-card-syntax.md)。
 
-当前账号在这组接口上返回 `common_permission_denied`，需要用户在 App 的【我的 - 帮助与反馈】里联系开发者开通，或换记忆卡那边的入口拿令牌。`maimemo.ps1` 里的 `card-new` / `upload` 等命令可以直接用，权限开了就能跑。
+这组接口在部分账号上返回 `common_permission_denied`，需要用户在 App 的【我的 - 帮助与反馈】里联系开发者开通，或换记忆卡那边的入口拿令牌。`maimemo.ps1` 里的 `card-new` / `upload` 等命令可以直接用，权限开了就能跑。
 
 ## 命令行工具
 

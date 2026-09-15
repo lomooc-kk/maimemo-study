@@ -9,7 +9,9 @@ description: 通过墨墨开放 API 取用背单词数据并产出复习材料�
 
 ## 开工前
 
-令牌按这个顺序取：命令行 `--token` → 环境变量 `MAIMEMO_TOKEN` → 文件 `~/.codex/maimemo_token`。三个地方都没有就问用户要一个，别自己编。令牌等于账号钥匙，不要写进交付物或日志。
+每个使用者用自己的墨墨令牌，仓库里不带任何令牌。用户还没准备时，告诉他两个获取入口：墨墨背单词 App → 我的 → 更多设置 → 实验功能 → 开放 API，或登录后打开 <https://open.maimemo.com/open/api/v1/tokens/openapi>。
+
+令牌按这个顺序取：命令行 `--token` → 环境变量 `MAIMEMO_TOKEN` → 文件 `~/.codex/maimemo_token`。三个地方都没有就问用户要一个，别自己编。拿到之后建议存进那个文件，之后就不用反复粘贴。令牌等于账号钥匙，不要写进交付物、日志或仓库。
 
 脚本用 `py -3` 运行，只依赖 Python 标准库，不用装包。
 
@@ -34,9 +36,9 @@ py -3 scripts/collect_review_words.py --from 2026-09-01 --to 2026-09-13 --out wo
 
 ## 二、把错词写成记忆材料
 
-动手前读 [references/passage.md](references/passage.md)。默认写成雅思阅读那种学术说明文：中性标题、若干个小节、被动语态与名词化、有保留的表述，目标词像生词本来就在文章里一样自然嵌入并加粗。这批词明显不适合学术文体时（比如全是口语动作词）可以换写法，交付时说明一句。
+动手前读 [references/passage.md](references/passage.md)。默认写成雅思阅读那种学术说明文，但**第一要求是读得进去**：句子短（平均 12–18 词、不超过 30 词）、一句最多一个从句、一句里的目标词不超过两个、除目标词外全用常见词。文章要有梗概和主线：开头两句话交代背景与全文顺序，每节第一句是主题句，节与节之间有显式衔接，结尾两三句收回主线。写完做一次"梗概测试"——把所有小标题和每段第一句连起来读，读得通才算逻辑成立。
 
-篇幅跟着词数走，不是固定值：二三十个词写 400–600 词，五十来个写 800–1100 词，一百个上下写 1500–2000 词、六节左右。平均每 10 个词出现一个目标词最舒服，超过 18 就说明铺垫太多。一次超过 120 个词时先问用户要一篇长的还是拆成两三篇短的。
+篇幅跟着词数走，不是固定值：二三十个词写 400–600 词，五十来个写 700–1000 词，一百个上下写 1200–1800 词、五到七节。目标词平均每 12–18 个词出现一个最舒服，超过 18 就说明铺垫太多。一次超过 120 个词时先问用户要一篇长的还是拆成两三篇短的。
 
 中间稿按「英文段落 → 该段中文译文 → 该段生词」交替写，用脚本核对，不要凭印象：
 
@@ -82,17 +84,18 @@ powershell -ExecutionPolicy Bypass -File scripts/maimemo.ps1 raw GET "/memo/voca
 
 端点清单、必填字段、常见报错、记忆卡正文语法，都在 [references/api.md](references/api.md)。遇到没见过的报错先去那里对一遍再动手。
 
-记忆卡（Markji）那组接口目前对这个账号返回权限不足，需要用户在 App 里联系开发者开通；背单词那组完全可用。
+记忆卡（Markji）那组接口在部分账号上返回权限不足，需要用户在 App 里联系开发者开通；背单词那组接口通常直接可用。
 
 ## 维护这个技能
 
-这个目录同时是 GitHub 私有仓库 `lomooc-kk/maimemo-study` 的工作副本，`origin` 已经配好，改完直接提交推送：
+改动这个技能时，改完要真跑一次确认能用，再提交到它所在的仓库（如果有）：
 
 ```bash
-cd "$HOME/.codex/skills/maimemo-study"
 git add -A
 git commit -m "更新说明"
 git push
 ```
 
-改脚本后要真跑一次确认能用（`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不用令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下；`docx2pdf.ps1` 要本机有 Word，转一份出来看页数对不对）。PowerShell 脚本必须存成带 BOM 的 UTF-8——用编辑器或脚本改过之后检查一下开头是不是还有 BOM，否则 Windows PowerShell 会把中文注释读成乱码并直接语法报错。令牌只放在 `~/.codex/maimemo_token`，永远不要提交进仓库。
+验证方式：`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不用令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下；`docx2pdf.ps1` 要本机有 Word，转一份出来看页数对不对。PowerShell 脚本必须存成带 BOM 的 UTF-8——改过之后检查开头是不是还有 BOM，否则 Windows PowerShell 会把中文注释读成乱码并直接报语法错误。
+
+令牌只放在 `~/.codex/maimemo_token` 或环境变量里，永远不要提交进仓库。
