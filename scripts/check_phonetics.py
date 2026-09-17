@@ -9,10 +9,11 @@
 
 判定规则：
     * 词条必须写成 `- 单词 词性 /音标/ 释义`；缺词性或缺音标直接报错。
+    * 音标统一用美式（General American）：卷舌音写出来（car /kɑːr/），go 写 /ɡoʊ/。
     * 音标只允许 IPA 字符；多音节词必须有且只有一个重音符号 ˈ。
     * 联网时向 dictionaryapi.dev 取该词的标准音标，和我们的写法比对：
       - 辅音骨架不一致 → 报错（多半是写错了）
-      - 只差元音（英式/美式差异，如 ɒ/ɑː、ə/ɜː）→ 只提示，不算错
+      - 只差元音写法（不同词典的标注差异）→ 只提示，不算错
       - 查得到的词会写进 references/phonetics_cache.tsv，之后可离线复用
 
 退出码非 0 表示有问题，改到通过为止。
@@ -235,8 +236,8 @@ def main():
             )
         else:
             warnings.append(
-                f"{label}：只有元音写法不同（多半是英式/美式差异）—— 我们写 "
-                f"{strip_marks(entry['ipa'])}，标准 {strip_marks(info['ipa'])}"
+                f"{label}：只有元音写法不同（不同词典的标注差异，注意我们统一写美式）—— 我们写 "
+                f"{strip_marks(entry['ipa'])}，参考 {strip_marks(info['ipa'])}"
             )
 
     if do_net:
