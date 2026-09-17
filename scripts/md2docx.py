@@ -201,19 +201,26 @@ def split_row(line):
     return [c.strip() for c in line.strip().strip('|').split('|')]
 
 
+POS_TOKEN = r'(?:n|v|adj|adv|prep|conj|pron|num|int|phr|abbr)\.'
 ENTRY_RE = re.compile(
-    r'^(?P<word>[^\s/\[（(]+)\s*(?P<phon>[/\[][^/\]\n]{1,40}[/\]])?\s*(?P<mean>.*)$'
+    r'^(?P<word>[^\s/\[（(]+)\s*'
+    r'(?:(?P<pos>' + POS_TOKEN + r'(?:\s*[/&,]\s*' + POS_TOKEN + r')*)\s+)?'
+    r'(?P<phon>[/\[][^/\]\n]{1,40}[/\]])?\s*'
+    r'(?P<mean>.*)$'
 )
 
 
 def parse_entry(text):
-    """把 `- terrain /təˈreɪn/ 地形；地势` 拆成单词、音标、释义。"""
+    """把 `- terrain n. /təˈreɪn/ 地形；地势` 拆成单词、词性、音标、释义。"""
     text = text.strip().lstrip('-*').strip()
     match = ENTRY_RE.match(text)
     if not match:
-        return text, '', ''
+        return text, '', '', ''
     word = match.group('word').strip('*`')
-    return word, (match.group('phon') or '').strip(), match.group('mean').strip()
+    return (word,
+            (match.group('pos') or '').strip(),
+            (match.group('phon') or '').strip(),
+            match.group('mean').strip())
 
 
 def set_cant_split(row):
@@ -253,7 +260,7 @@ def add_word_list(doc, entries, size=9.5, columns=2):
             break
         cell = table.cell(row_index, column)
         cell.width = Inches(round(width, 3))
-        word, phon, mean = parse_entry(entry)
+        word, pos, phon, mean = parse_entry(entry)
         paragraph = cell.paragraphs[0]
         for run in list(paragraph.runs):
             run._element.getparent().remove(run._element)
@@ -267,6 +274,12 @@ def add_word_list(doc, entries, size=9.5, columns=2):
         set_run_font(run)
         run.bold = True
         run.font.size = Pt(size)
+        if pos:
+            run = paragraph.add_run(' ' + pos)
+            set_run_font(run)
+            run.italic = True
+            run.font.size = Pt(size - 1)
+            run.font.color.rgb = RGBColor(0x59, 0x59, 0x59)
         if phon:
             run = paragraph.add_run(' ' + phon)
             set_run_font(run)

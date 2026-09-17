@@ -29,6 +29,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='repla
 BOLD = re.compile(r'\*\*(.+?)\*\*')
 ENTRY_WORD = re.compile(r"^([A-Za-z][A-Za-z'\-]*)")
 PHONETIC = re.compile(r'[/\[][^/\]\n]{1,40}[/\]]')
+POS_RE = re.compile(r'(?:^|\s)(?:n|v|adj|adv|prep|conj|pron|num|int|phr|abbr)\.')
 
 # 不规则变化：正文里出现的形式 -> 单词表里的原形
 IRREGULAR = {
@@ -261,6 +262,11 @@ def main():
         no_phonetic = [text.split()[0] for text in raw_entries if not PHONETIC.search(text)]
         print(f'带音标（{len(raw_entries) - len(no_phonetic)}/{len(raw_entries)}）：'
               + (show(no_phonetic) + ' 缺音标' if no_phonetic else '都有'))
+        no_pos = [text.split()[0] for text in raw_entries if not POS_RE.search(text)]
+        print(f'带词性（{len(raw_entries) - len(no_pos)}/{len(raw_entries)}）：'
+              + (show(no_pos) + ' 缺词性' if no_pos else '都有'))
+        if no_pos:
+            problems.append('缺词性')
         if list_missing or list_extra or duplicated or order_bad:
             problems.append('单词表')
 

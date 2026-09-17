@@ -57,7 +57,11 @@ py -3 scripts/check_passage.py --words work/words.json --md work/src.md
 py -3 scripts/check_difficulty.py --md work/src.md --level 中等 --words work/words.json
 ```
 
-退出码非 0 就改到通过为止；它还会报有几条生词缺音标。中文释义和音标接口都不提供，都得自己写，条目写成 `单词 /英式音标/ 释义`（释义放不下会自动换行，不用为凑一行砍义项）。成品给 Word 和 PDF 两份，文件名带日期区间：
+退出码非 0 就改到通过为止；它还会报有几条生词缺音标或缺词性。中文释义和音标接口都不提供，都得自己写，条目写成 `单词 词性 /英式音标/ 释义`，词性（`n.` `v.` `adj.` 等）必写、常用词给 1–3 个义项，例如 `plumb v./n. /plʌm/ 探测深度；垂直的；铅锤`。
+
+音标必须写对：拿不准的词先用 `py -3 scripts/check_phonetics.py --lookup <单词>` 查一下再写；写完全文跑一次 `py -3 scripts/check_phonetics.py --md work/src.md`（本地检查，秒级，查字符集、重音位置和词性）。`--verify` 会联网逐词比对，几十个词要好几分钟，只在用户明确要求整篇核对时开。
+
+成品给 Word 和 PDF 两份，文件名带日期区间和难度档：
 
 ```bash
 py -3 scripts/md2docx.py work/src.md "outputs/错词短文-9月11-12日-中等.docx" "标题"
@@ -103,6 +107,6 @@ git commit -m "更新说明"
 git push
 ```
 
-验证方式：`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不用令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下；`docx2pdf.ps1` 要本机有 Word，转一份出来看页数对不对。PowerShell 脚本必须存成带 BOM 的 UTF-8——改过之后检查开头是不是还有 BOM，否则 Windows PowerShell 会把中文注释读成乱码并直接报语法错误。
+验证方式：`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不用令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下；`check_phonetics.py` 的本地检查不联网（拿一篇短文跑一次即可，`--lookup` 才需要联网，试一两个词）；`docx2pdf.ps1` 要本机有 Word，转一份出来看页数对不对。PowerShell 脚本必须存成带 BOM 的 UTF-8——改过之后检查开头是不是还有 BOM，否则 Windows PowerShell 会把中文注释读成乱码并直接报语法错误。
 
 令牌只放在 `~/.codex/maimemo_token` 或环境变量里，永远不要提交进仓库。
