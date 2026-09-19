@@ -30,7 +30,6 @@ BOLD = re.compile(r'\*\*(.+?)\*\*')
 ENTRY_WORD = re.compile(r"^([A-Za-z][A-Za-z'\-]*)")
 PHONETIC = re.compile(r'[/\[][^/\]\n]{1,40}[/\]]')
 POS_RE = re.compile(r'(?:^|\s)(?:n|v|adj|adv|prep|conj|pron|num|int|phr|abbr)\.')
-HOOK_RE = re.compile(r'｜\s*\S')
 
 # 不规则变化：正文里出现的形式 -> 单词表里的原形
 IRREGULAR = {
@@ -279,11 +278,6 @@ def main():
               + (show(no_pos) + ' 缺词性' if no_pos else '都有'))
         if no_pos:
             problems.append('缺词性')
-        no_hook = [text.split()[0] for text in raw_entries if not HOOK_RE.search(text)]
-        print(f'带记忆钩子（{len(raw_entries) - len(no_hook)}/{len(raw_entries)}）：'
-              + (show(no_hook) + ' 缺钩子' if no_hook else '都有'))
-        if no_hook:
-            problems.append('缺记忆钩子')
         if list_missing or list_extra or duplicated or order_bad:
             problems.append('单词表')
 

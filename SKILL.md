@@ -66,7 +66,7 @@ py -3 scripts/check_passage.py --words work/words.json --md work/src.md
 py -3 scripts/check_difficulty.py --md work/src.md --level 中等 --words work/words.json
 ```
 
-退出码非 0 就改到通过为止；它还会报有几条生词缺音标、缺词性或缺记忆钩子。中文释义和音标接口都不提供，都得自己写，条目写成 `单词 词性 /美式音标/ 释义 ｜ 记忆钩子`，词性（`n.` `v.` `adj.` 等）必写、常用词给 1–3 个义项，钩子 6–20 字（常用搭配／词根词缀／形近对比／联想），例如 `harsh adj. /hɑːrʃ/ 严厉的；恶劣的 ｜ harsh winter 严冬；harshly 严厉地`。音标一律用美式（General American）：卷舌音要写出来（car `/kɑːr/`、hard `/hɑːrd/`），go 写 `/ɡoʊ/`，law 写 `/lɔː/`，不要用英式的 ɒ、əʊ 或不写 r。
+退出码非 0 就改到通过为止；它还会报有几条生词缺音标或缺词性。中文释义和音标接口都不提供，都得自己写，条目写成 `单词 词性 /美式音标/ 释义`，词性（`n.` `v.` `adj.` 等）必写、常用词给 1–3 个义项，例如 `harsh adj. /hɑːrʃ/ 严厉的；恶劣的`。音标一律用美式（General American）：卷舌音要写出来（car `/kɑːr/`、hard `/hɑːrd/`），go 写 `/ɡoʊ/`，law 写 `/lɔː/`，不要用英式的 ɒ、əʊ 或不写 r。
 
 音标必须写对：拿不准的词先用 `py -3 scripts/check_phonetics.py --lookup <单词>` 查一下再写；写完全文跑一次 `py -3 scripts/check_phonetics.py --md work/src.md`（本地检查，秒级，查字符集、重音位置和词性）。`--verify` 会联网逐词比对，几十个词要好几分钟，只在用户明确要求整篇核对时开。
 
