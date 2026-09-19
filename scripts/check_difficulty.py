@@ -88,14 +88,23 @@ def load_words(path):
         return [w.strip().lower() for w in raw.split() if w.strip()]
 
 
-def count_targets(sentence, word_list):
-    targets = [span.strip().lower() for span in BOLD.findall(sentence)]
-    # 加粗部分先挖掉，否则同一个词会被算两次（一次加粗、一次命中词表）
+def count_targets(sentence, word_list=None):
+    """句子里加粗的目标词数（首现）。
+
+    刻意安排的复现（同一个词后文不再加粗地再出现）不算进"一句最多几个目标词"，
+    不然"复现两三次"这条新规则会被误判。可以用 count_repeats 单独看复现量。
+    """
+    return len(BOLD.findall(sentence))
+
+
+def count_repeats(sentence, word_list):
+    """句子里没加粗、但属于目标词的复现次数。"""
     lowered = BOLD.sub(' ', sentence).lower()
+    hits = []
     for word in word_list:
         if word and re.search(rf'\b{re.escape(word)}\w*', lowered):
-            targets.append(word)
-    return len(targets)
+            hits.append(word)
+    return hits
 
 
 def count_clauses(sentence):
@@ -122,10 +131,13 @@ def main():
         return 1
 
     all_sentences, per_paragraph = [], []
+    repeat_words = {}
     for index, paragraph in enumerate(paragraphs, 1):
         items = sentences(paragraph)
         per_paragraph.append(sum(count_targets(s, word_list) for s in items))
         for sentence in items:
+            for word in count_repeats(sentence, word_list):
+                repeat_words[word] = repeat_words.get(word, 0) + 1
             all_sentences.append({
                 'paragraph': index,
                 'text': sentence,
@@ -146,6 +158,10 @@ def main():
     print(f'最长句 {longest["length"]} 词（该档上限 {limits["max_len"]}）')
     print(f'密度：每 {density:.1f} 个词一个目标词（该档建议 {limits["density"][0]}–{limits["density"][1]}）')
     print(f'每段加粗词数：{per_paragraph}（该档建议 {limits["per_para"][0]}–{limits["per_para"][1]}）')
+    if word_list:
+        repeated = sum(repeat_words.values())
+        print(f'复现：另有 {repeated} 处未加粗复现，涉及 {len(repeat_words)} 个词'
+              + (f'（{", ".join(sorted(repeat_words)[:8])}…）' if repeated else '（还没有刻意复现）'))
 
     problems = []
     if not limits['avg'][0] <= average <= limits['avg'][1]:

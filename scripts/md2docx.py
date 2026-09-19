@@ -211,16 +211,21 @@ ENTRY_RE = re.compile(
 
 
 def parse_entry(text):
-    """把 `- terrain n. /təˈreɪn/ 地形；地势` 拆成单词、词性、音标、释义。"""
+    """把 `- terrain n. /təˈreɪn/ 地形；地势 ｜ 记忆钩子` 拆成单词、词性、音标、释义、钩子。"""
     text = text.strip().lstrip('-*').strip()
     match = ENTRY_RE.match(text)
     if not match:
-        return text, '', '', ''
+        return text, '', '', '', ''
     word = match.group('word').strip('*`')
+    mean = match.group('mean').strip()
+    hook = ''
+    if '｜' in mean:
+        mean, hook = (part.strip() for part in mean.split('｜', 1))
     return (word,
             (match.group('pos') or '').strip(),
             (match.group('phon') or '').strip(),
-            match.group('mean').strip())
+            mean,
+            hook)
 
 
 def set_cant_split(row):
@@ -260,7 +265,7 @@ def add_word_list(doc, entries, size=9.5, columns=2):
             break
         cell = table.cell(row_index, column)
         cell.width = Inches(round(width, 3))
-        word, pos, phon, mean = parse_entry(entry)
+        word, pos, phon, mean, hook = parse_entry(entry)
         paragraph = cell.paragraphs[0]
         for run in list(paragraph.runs):
             run._element.getparent().remove(run._element)
@@ -287,6 +292,12 @@ def add_word_list(doc, entries, size=9.5, columns=2):
             run.font.color.rgb = RGBColor(0x59, 0x59, 0x59)
         if mean:
             add_inline(paragraph, ' ' + mean, size=size)
+        if hook:
+            run = paragraph.add_run('  ｜ ' + hook)
+            set_run_font(run)
+            run.italic = True
+            run.font.size = Pt(size - 2)
+            run.font.color.rgb = RGBColor(0x70, 0x70, 0x70)
     for row in table.rows:
         set_cant_split(row)
         set_row_min_height(row, size + 3)
