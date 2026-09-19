@@ -131,6 +131,17 @@ def bases(word):
             if item.endswith('ed') and len(item) > 3:
                 candidates.add(item[:-2])
                 candidates.add(item[:-1])
+            # 比较级/最高级：sturdier → sturdy、later → late
+            if item.endswith('ier') and len(item) > 4:
+                candidates.add(item[:-3] + 'y')
+            if item.endswith('iest') and len(item) > 5:
+                candidates.add(item[:-4] + 'y')
+            if item.endswith('er') and len(item) > 4:
+                candidates.add(item[:-2])
+                candidates.add(item[:-1])
+            if item.endswith('est') and len(item) > 5:
+                candidates.add(item[:-3])
+                candidates.add(item[:-2])
             # 重叠辅音两个方向都生成：omitted → omitt → omit，swell → swel
             if len(item) > 3 and item[-1] == item[-2]:
                 candidates.add(item[:-1])
