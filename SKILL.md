@@ -72,14 +72,14 @@ py -3 scripts/check_difficulty.py --md work/src.md --level 中等 --words work/w
 
 音标必须写对：拿不准的词先用 `py -3 scripts/check_phonetics.py --lookup <单词>` 查一下再写；写完全文跑一次 `py -3 scripts/check_phonetics.py --md work/src.md`（本地检查，秒级，查字符集、重音位置和词性）。`--verify` 会联网逐词比对，几十个词要好几分钟，只在用户明确要求整篇核对时开。
 
-成品给 Word 和 PDF 两份，文件名带日期区间和难度档：
+成品**只交 PDF**，文件名带日期区间和难度档。Word 只当转换引擎：中间的 `.docx` 生成在 `work/` 里，转完自动删掉，不进 `outputs/`、不交给用户。
 
 ```bash
-py -3 scripts/md2docx.py work/src.md "outputs/错词短文-9月11-12日-中等.docx" "标题"
-powershell -ExecutionPolicy Bypass -File scripts/docx2pdf.ps1 -Docx "outputs/错词短文-9月11-12日-中等.docx" -Pdf "outputs/错词短文-9月11-12日-中等.pdf"
+powershell -ExecutionPolicy Bypass -File scripts/md2pdf.ps1 -Md work/src.md `
+  -Pdf "outputs/错词短文-9月11-12日-中等.pdf" -Title "文章标题"
 ```
 
-`md2docx.py` 会把中文段落排成 9 磅小字、把生词块排成两列小字（单词 9.5 磅加粗、音标 8.5 磅灰字、释义同字号，每条不跨页），生词块前后自动留出间距，不会和上下段落贴在一起；`docx2pdf.ps1` 用本机装的 Word 导出 PDF，没装就只交 Word 并说明一句。
+`md2pdf.ps1` 内部先调 `md2docx.py` 生成临时 Word（中文段落 9 磅小字、生词块两列小字：单词 9.5 磅加粗、音标 8.5 磅灰字，每条不跨页，块前后留间距），再用 `docx2pdf.ps1` 调本机 Word 导出 PDF，最后删掉临时文件。本机没装 Word 时会报错，这时跟用户说明，不要擅自改成交付 Word。要留一份中间 Word 备查可以加 `-KeepDocx`。
 
 ## 三、把内容写回账号
 
@@ -118,6 +118,6 @@ git commit -m "更新说明"
 git push
 ```
 
-验证方式：`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不用令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下；`check_phonetics.py` 的本地检查不联网（拿一篇短文跑一次即可，`--lookup` 才需要联网，试一两个词）；`docx2pdf.ps1` 要本机有 Word，转一份出来看页数对不对。PowerShell 脚本必须存成带 BOM 的 UTF-8——改过之后检查开头是不是还有 BOM，否则 Windows PowerShell 会把中文注释读成乱码并直接报语法错误。
+验证方式：`collect_review_words.py` 需要令牌；`maimemo.ps1` 可以用 `-DryRun` 空跑；`check_passage.py` 不用令牌，拿任意一份 words.json 加短文跑一次，漏词和顺序两种情况都验一下；`check_phonetics.py` 的本地检查不联网（拿一篇短文跑一次即可，`--lookup` 才需要联网，试一两个词）；`md2pdf.ps1` 要本机有 Word，跑一份出来看页数对不对，并确认 `work/` 里的临时 `.docx` 已自动删掉、`outputs/` 里只有 PDF。PowerShell 脚本必须存成带 BOM 的 UTF-8——改过之后检查开头是不是还有 BOM，否则 Windows PowerShell 会把中文注释读成乱码并直接报语法错误。
 
 令牌只放在 `~/.codex/maimemo_token` 或环境变量里，永远不要提交进仓库。
