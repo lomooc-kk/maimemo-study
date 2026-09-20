@@ -10,6 +10,10 @@
 
 令牌读取顺序：--token 参数 -> 环境变量 MAIMEMO_TOKEN -> ~/.codex/maimemo_token 文件。
 只调用只读接口，不会修改账号里的任何数据。
+
+日期一律按**北京时间**理解。接口返回的时间戳是 UTC，日期边界是北京时间零点
+（北京时间 9 月 20 日学习的词返回 "2026-09-19T16:00:00.000Z"），脚本内部统一换算，
+不要自己截字符串前 10 位。
 """
 
 import argparse
@@ -28,6 +32,27 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='repla
 BASE = 'https://open.maimemo.com/open/api/v1'
 RESPONSES = {'FAMILIAR': '认识', 'VAGUE': '不熟', 'FORGET': '忘记', 'WELL_FAMILIAR': '熟知'}
 TOKEN_FILE = os.path.join(os.path.expanduser('~'), '.codex', 'maimemo_token')
+
+# 接口返回的 ISODate 是 UTC 存储，日期边界按北京时间（+08:00）。
+# 例如「北京时间 2026-09-20 学的词」返回的是 "2026-09-19T16:00:00.000Z"。
+# 直接截前 10 位会整体错开一天，所以一律换算到北京时区再取日期。
+TZ_LOCAL = dt.timezone(dt.timedelta(hours=8))
+
+
+def local_date(value):
+    """把接口的 ISODate 换算成北京时区日期字符串（YYYY-MM-DD）。"""
+    if not value:
+        return ''
+    text = str(value).strip()
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    try:
+        moment = dt.datetime.fromisoformat(text)
+    except ValueError:
+        return str(value)[:10]
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=dt.timezone.utc)
+    return moment.astimezone(TZ_LOCAL).date().isoformat()
 
 
 def load_token(explicit=None):
@@ -152,14 +177,14 @@ def main():
 
     picked = []
     for record in records.values():
-        studied = (record.get('last_study_date') or '')[:10]
+        studied = local_date(record.get('last_study_date'))
         if record.get('last_response') in wanted and first_day.isoformat() <= studied <= last_day.isoformat():
             picked.append({
                 'spelling': record.get('voc_spelling'),
                 'voc_id': record.get('voc_id'),
                 'last_response': record.get('last_response'),
                 'last_study_date': studied,
-                'next_study_date': (record.get('next_study_date') or '')[:10],
+                'next_study_date': local_date(record.get('next_study_date')),
                 'study_count': record.get('study_count'),
             })
     picked.sort(key=lambda item: (item['last_study_date'], item['last_response'], item['spelling']))

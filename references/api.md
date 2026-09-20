@@ -62,6 +62,12 @@ DELETE 端点：`/memo/phrases/{id}`、`/memo/notes/{id}`、`/memo/interpretatio
 
 `as_count: true` 时只回数量，用来估算规划总量。
 
+**日期字段是 UTC 存储，一天的分界线是北京时间零点。**北京时间 2026-09-20 学过的词，
+`last_study_date` 返回 `2026-09-19T16:00:00.000Z`——直接截开头 10 位会整体错开一天。
+取「北京时间哪一天学的」必须把时间戳换算到 +08:00 再取日期，`collect_review_words.py`
+里的 `local_date()` 就是干这个的。判断自己有没有算错，可以拿当天的
+`get_study_progress.finished` 和当天那条记录的条数对一下，数字应该能对上。
+
 ## 写入时的必填字段
 
 文档里没强调、但接口强制的字段，漏了会报 `common_invalid_param ... must have required property`：
